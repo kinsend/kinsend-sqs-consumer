@@ -20,7 +20,7 @@ import { UpdateFindByIdWithoutReportingAction } from './UpdateFindByIdWithoutRep
 import { MessageCreateAction } from '../../messages/services/MessageCreateAction.service';
 import { RequestContext } from '../../../utils/RequestContext';
 import { SmsService } from '../../../shared/services/sms.service';
-import { TYPE_MESSAGE } from '../../../domain/const';
+import { REGION_DOMESTIC, TYPE_MESSAGE } from '../../../domain/const';
 import { UpdateChargeMessageTriggerAction } from './UpdateTriggerAction/UpdateChargeMessageTriggerAction';
 
 import { FormSubmissionFindByIdAction } from 'src/modules/form.submission/services/FormSubmissionFindByIdAction.service';
@@ -29,6 +29,7 @@ import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessag
 import { UpdateDocument } from '../update.schema';
 import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
 import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
+import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
 
 
 @Injectable()
@@ -173,5 +174,13 @@ export class UpdateHandleSendSmsAction {
       subscriber as FormSubmissionDocument,
     );
     return linkCreated.messageReview;
+  }
+
+  private handleTypeMessage(phoneNumberReceipted: string): TYPE_MESSAGE {
+    const region = regionPhoneNumber(phoneNumberReceipted);
+    if (!region || region === REGION_DOMESTIC) {
+      return TYPE_MESSAGE.MESSAGE_UPDATE_DOMESTIC;
+    }
+    return TYPE_MESSAGE.MESSAGE_UPDATE_INTERNATIONAL;
   }
 }

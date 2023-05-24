@@ -4,7 +4,7 @@ import { Exclude, Transform } from 'class-transformer';
 import { PhoneNumber } from './dtos/UserResponse.dto';
 import { USER_PROVIDER } from './interfaces/user.interface';
 import { VCard } from '../virtualcard/virtual.card.schema';
-import { STATUS } from '../domain/const';
+import { STATUS } from 'src/domain/const';
 
 export type UserDocument = User & Document;
 

@@ -1,6 +1,7 @@
 /* eslint-disable spaced-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { PRICE_PER_MESSAGE_INTERNATIONAL } from 'src/domain/const';
 import { Twilio } from 'twilio';
 import { MessageListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/message';
 import { ConfigService } from '../../configs/config.service';
@@ -63,6 +64,31 @@ export class SmsService {
       if (callbackSaveSms) {
         await callbackSaveSms('failed', JSON.stringify(error));
       }
+    }
+  }
+
+  async getPriceSendMessage(context: RequestContext, region: string): Promise<number> {
+    const { logger, correlationId } = context;
+    try {
+      const twilioClientCountries = this.twilioClient.pricing.v1.messaging.countries;
+      if (!twilioClientCountries) {
+        logger.error({
+          correlationId,
+          message: 'Get price message fail!',
+        });
+        return PRICE_PER_MESSAGE_INTERNATIONAL;
+      }
+      const countryPricing = await twilioClientCountries(region).fetch();
+      const price = (countryPricing.outboundSmsPrices as any)[0].prices[0].current_price;
+      return price;
+    } catch (error: any) {
+      const errorMessage = error.message || error;
+      logger.error({
+        correlationId,
+        msg: 'Request buy phone numbers error',
+        error: errorMessage,
+      });
+      return PRICE_PER_MESSAGE_INTERNATIONAL;
     }
   }
 }
