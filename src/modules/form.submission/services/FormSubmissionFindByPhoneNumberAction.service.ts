@@ -6,12 +6,16 @@ import { DataHelper } from '../../../utils/DataHelper';
 import { NotFoundException } from '../../../utils/exceptions/NotFoundException';
 import { RequestContext } from '../../../utils/RequestContext';
 import { PhoneNumber } from '../../user/dtos/UserResponse.dto';
-import { FormSubmission, FormSubmissionDocument } from '../form.submission.schema';
+import {
+  FormSubmission,
+  FormSubmissionDocument,
+} from '../form.submission.schema';
 
 @Injectable()
 export class FormSubmissionFindByPhoneNumberAction {
   constructor(
-    @InjectModel(FormSubmission.name) private formSubmissionModel: Model<FormSubmissionDocument>,
+    @InjectModel(FormSubmission.name)
+    private formSubmissionModel: Model<FormSubmissionDocument>,
   ) {}
 
   async execute(

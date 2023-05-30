@@ -10,9 +10,11 @@ import { FormSubmissionUpdateLastContactedAction } from './services/FormSubmissi
 @Module({
   controllers: [],
   imports: [
-    MongooseModule.forFeature([{ name: FormSubmission.name, schema: FormSubmissionSchema }]),
+    MongooseModule.forFeature([
+      { name: FormSubmission.name, schema: FormSubmissionSchema },
+    ]),
     UserModule,
-    forwardRef(() => FormModule)
+    forwardRef(() => FormModule),
   ],
   providers: [
     FormSubmissionFindByIdAction,
@@ -22,7 +24,7 @@ import { FormSubmissionUpdateLastContactedAction } from './services/FormSubmissi
   exports: [
     FormSubmissionFindByIdAction,
     FormSubmissionFindByPhoneNumberAction,
-    FormSubmissionUpdateLastContactedAction
+    FormSubmissionUpdateLastContactedAction,
   ],
 })
 export class FormSubmissionModule {}

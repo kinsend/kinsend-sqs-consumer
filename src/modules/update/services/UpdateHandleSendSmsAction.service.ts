@@ -12,8 +12,10 @@ import {
   FormSubmissionDocument,
 } from 'src/modules/form.submission/form.submission.schema';
 
-
-import { UpdateSchedule, UpdateScheduleDocument } from '../update.schedule.schema';
+import {
+  UpdateSchedule,
+  UpdateScheduleDocument,
+} from '../update.schedule.schema';
 import { LinkRediectCreateByMessageAction } from './link.redirect/LinkRediectCreateByMessageAction.service';
 import { UpdateUpdateProgressAction } from './UpdateUpdateProgressAction.service';
 import { UpdateFindByIdWithoutReportingAction } from './UpdateFindByIdWithoutReportingAction.service';
@@ -31,15 +33,11 @@ import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
 import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
 import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
 
-
 @Injectable()
 export class UpdateHandleSendSmsAction {
-
   constructor(
-    private formSubmissionUpdateLastContactedAction : FormSubmissionUpdateLastContactedAction
-  ){
-
-  }
+    private formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
+  ) {}
 
   // private readonly sqsService: SqsService;
 
@@ -47,37 +45,39 @@ export class UpdateHandleSendSmsAction {
   @Inject(UpdateChargeMessageTriggerAction)
   private updateChargeMessageTriggerAction: UpdateChargeMessageTriggerAction;
 
-  @InjectModel(UpdateSchedule.name) private updateScheduleModel: Model<UpdateScheduleDocument>;
+  @InjectModel(UpdateSchedule.name)
+  private updateScheduleModel: Model<UpdateScheduleDocument>;
 
-
-    // Created
+  // Created
   @Inject(FormSubmissionFindByIdAction)
   private formSubmissionFindByIdAction: FormSubmissionFindByIdAction;
 
   async handleSendSms(
     context: RequestContext,
     linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
+    // formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
     updateUpdateProgressAction: UpdateUpdateProgressAction,
     smsService: SmsService,
-    updateFindByIdWithoutReportingAction: UpdateFindByIdWithoutReportingAction,
+    // updateFindByIdWithoutReportingAction: UpdateFindByIdWithoutReportingAction,
     ownerPhoneNumber: string,
     subscribers: FormSubmission[],
     update: UpdateDocument,
-    datetimeTrigger: Date,
+    // datetimeTrigger: Date,
     scheduleName: string,
   ): Promise<void> {
-
     const { logger } = context;
-    
+
     const timeTriggerSchedule = new Date();
-
+    console.log('Outside promise.all');
     await Promise.all(
-
       subscribers.map(async (sub) => {
-
+        console.log('Inside promise.all');
         const { phoneNumber, firstName, lastName, email, _id } = sub;
 
-        const subscriber = await this.formSubmissionFindByIdAction.execute(context, _id.toString());
+        const subscriber = await this.formSubmissionFindByIdAction.execute(
+          context,
+          _id.toString(),
+        );
 
         if (!subscriber || !subscriber.isSubscribed) {
           return;
@@ -103,7 +103,11 @@ export class UpdateHandleSendSmsAction {
         });
 
         // Note: run async for update lastContacted
-        this.formSubmissionUpdateLastContactedAction.execute(context, to, ownerPhoneNumber);
+        this.formSubmissionUpdateLastContactedAction.execute(
+          context,
+          to,
+          ownerPhoneNumber,
+        );
 
         return smsService.sendMessage(
           context,
@@ -112,15 +116,24 @@ export class UpdateHandleSendSmsAction {
           update.fileUrl,
           to,
           `api/hook/sms/update/status/${update.id}`,
-          this.saveSms(context, ownerPhoneNumber, to, messageFilled, update.fileUrl, update.id),
+          this.saveSms(
+            context,
+            ownerPhoneNumber,
+            to,
+            messageFilled,
+            update.fileUrl,
+            update.id,
+          ),
         );
-
       }),
-
     );
     if (update.triggerType === INTERVAL_TRIGGER_TYPE.ONCE) {
       // Note: update process for update type Once
-      await updateUpdateProgressAction.execute(context, update.id, UPDATE_PROGRESS.DONE);
+      await updateUpdateProgressAction.execute(
+        context,
+        update.id,
+        UPDATE_PROGRESS.DONE,
+      );
       await this.updateScheduleModel.updateOne(
         { scheduleName },
         {
@@ -129,9 +142,15 @@ export class UpdateHandleSendSmsAction {
       );
     }
     try {
-      await this.updateChargeMessageTriggerAction.execute(context, update.id, timeTriggerSchedule);
+      await this.updateChargeMessageTriggerAction.execute(
+        context,
+        update.id,
+        timeTriggerSchedule,
+      );
     } catch (error) {
-      logger.error(`Exception payment charges error by Stripe: ${error.message || error}`);
+      logger.error(
+        `Exception payment charges error by Stripe: ${error.message || error}`,
+      );
     }
   }
 

@@ -38,8 +38,7 @@ import { UserModule } from '../user/user.module';
     forwardRef(() => MessageModule),
     forwardRef(() => FormSubmissionModule),
     forwardRef(() => PaymentModule),
-    SQSModule,
-    AWSModule
+    AWSModule,
   ],
   providers: [
     LinkRediectCreateAction,

@@ -1,22 +1,86 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { SQSMessageBody } from '../interfaces/body.interface';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SqsMessageHandler } from '@ssut/nestjs-sqs';
 import * as dotenv from 'dotenv';
+import { FormSubmissionUpdateLastContactedAction } from 'src/modules/form.submission/services/FormSubmissionUpdateLastContactedAction.service';
+import { UpdateHandleSendSmsAction } from 'src/modules/update/services/UpdateHandleSendSmsAction.service';
+import { UpdateUpdateProgressAction } from 'src/modules/update/services/UpdateUpdateProgressAction.service';
+import { LinkRediectCreateByMessageAction } from 'src/modules/update/services/link.redirect/LinkRediectCreateByMessageAction.service';
+import { SmsService } from 'src/shared/services/sms.service';
+import { rootLogger } from 'src/utils/Logger';
+import { RequestContext } from 'src/utils/RequestContext';
 dotenv.config();
 
 @Injectable()
 export class MessageHandler {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    // private configService: ConfigService,
+    @Inject(LinkRediectCreateByMessageAction)
+    private linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
+
+    // @Inject(FormSubmissionUpdateLastContactedAction)
+    // private formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
+
+    @Inject(UpdateHandleSendSmsAction)
+    private updateHandleSendSmsAction: UpdateHandleSendSmsAction,
+
+    @Inject(UpdateUpdateProgressAction)
+    private updateUpdateProgressAction: UpdateUpdateProgressAction,
+
+    @Inject(SmsService) private smsService: SmsService,
+  ) {}
 
   @SqsMessageHandler('kinsend-dev')
   async handleMessage(message: AWS.SQS.Message) {
-    // console.log(`Received message: ${message}`);
-    const keys = Object.keys(message);
-    console.log(JSON.parse(message.Body));
-    console.log(keys);
-    keys.forEach((key) => {
-      // console.log(`key: ${key}, value: ${message[key]}`);
-    });
+    // const { MessageId: msgId } = message;
+    let body: any = message.Body;
+    body = JSON.parse(body) as any;
+    let msg: any = body.message;
+    msg = JSON.parse(msg);
+    const { subscribers, ownerPhoneNumber, update, scheduleName } = msg.message;
+    console.log(
+      'subscribers',
+      subscribers,
+      'ownerPhoneNumber',
+      ownerPhoneNumber,
+      'update',
+      update,
+      'scheduleName',
+      scheduleName,
+    );
+    const context: RequestContext = {
+      logger: rootLogger,
+      correlationId: '',
+      user: {},
+    };
+    if (!update) {
+      Logger.error('update not found');
+    }
+    if (!ownerPhoneNumber) {
+      Logger.error('ownerPhoneNumber not found');
+    }
+    if (!subscribers) {
+      Logger.error('subscribers not found');
+    }
+    if (subscribers.length < 1) {
+      Logger.error('subscribers either not an array or is empty');
+    }
+    if (!scheduleName) {
+      Logger.error('scheduleName not found');
+    }
+    // const tempNumber = '+19179058788';
+    const tempNumber = '+13613064427';
+    this.updateHandleSendSmsAction.handleSendSms(
+      context,
+      this.linkRediectCreateByMessageAction,
+      // this.formSubmissionUpdateLastContactedAction,
+      this.updateUpdateProgressAction,
+      this.smsService,
+      tempNumber,
+      subscribers,
+      update,
+      scheduleName,
+    );
   }
 }
+
+// +19178891549

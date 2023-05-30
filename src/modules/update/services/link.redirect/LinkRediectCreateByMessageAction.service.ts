@@ -1,14 +1,12 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable unicorn/no-array-for-each */
 /* eslint-disable new-cap */
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { ConfigService } from '../../../../configs/config.service';
-import { regexLink } from '../../../../utils/getLinksInMessage';
 import { RequestContext } from '../../../../utils/RequestContext';
+import { regexLink } from '../../../../utils/getLinksInMessage';
 import { FormSubmissionDocument } from '../../../form.submission/form.submission.schema';
-import { LinkRedirect, LinkRedirectDocument } from '../../link.redirect.schema';
+import { LinkRedirect } from '../../link.redirect.schema';
 import { UpdateDocument } from '../../update.schema';
 import { LinkRediectCreateAction } from './LinkRediectCreateAction.service';
 
@@ -16,7 +14,7 @@ import { LinkRediectCreateAction } from './LinkRediectCreateAction.service';
 export class LinkRediectCreateByMessageAction {
   constructor(
     private readonly configService: ConfigService,
-    @InjectModel(LinkRedirect.name) private linkRedirectModel: Model<LinkRedirectDocument>,
+    @InjectModel(LinkRedirect.name)
     private linkRediectCreateAction: LinkRediectCreateAction,
   ) {}
 
@@ -36,7 +34,9 @@ export class LinkRediectCreateByMessageAction {
           subscriber,
           isRoot,
         );
-        messagesResponse.push(`${this.configService.backendDomain}/${linkCreated.url}`);
+        messagesResponse.push(
+          `${this.configService.backendDomain}/${linkCreated.url}`,
+        );
       } else {
         messagesResponse.push(item);
       }

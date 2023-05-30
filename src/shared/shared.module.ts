@@ -21,17 +21,7 @@ const { jwtSecret, accessTokenExpiry } = configService;
     }),
     MailModule,
   ],
-  exports: [
-    ConfigService,
-    SmsService,
-    StripeService,
-    MailModule,
-    CacheModule,
-  ],
-  providers: [
-    ConfigService,
-    SmsService,
-    StripeService,
-  ],
+  exports: [ConfigService, SmsService, StripeService, MailModule, CacheModule],
+  providers: [ConfigService, SmsService, StripeService],
 })
 export class SharedModule {}
