@@ -93,9 +93,12 @@ export class StripeService {
   ): Promise<Stripe.Response<Stripe.PaymentIntent>> {
     const { logger, correlationId } = context;
     try {
-      const payment = await this.stripe.paymentIntents.confirm(paymentIntentId, {
-        payment_method: payload.paymentMethod,
-      });
+      const payment = await this.stripe.paymentIntents.confirm(
+        paymentIntentId,
+        {
+          payment_method: payload.paymentMethod,
+        },
+      );
       return payment;
     } catch (error: any) {
       const message = 'Exception charged payment method error by Stripe';
@@ -148,9 +151,12 @@ export class StripeService {
   ): Promise<Stripe.Response<Stripe.PaymentMethod>> {
     const { logger, correlationId } = context;
     try {
-      const paymentInfo = await this.stripe.paymentMethods.attach(paymentMethodId, {
-        customer: customerId,
-      });
+      const paymentInfo = await this.stripe.paymentMethods.attach(
+        paymentMethodId,
+        {
+          customer: customerId,
+        },
+      );
 
       return paymentInfo;
     } catch (error: any) {
@@ -351,7 +357,8 @@ export class StripeService {
       const data = await this.stripe.subscriptions.create(payload);
       return data;
     } catch (error: any) {
-      const message = 'Exception created subscription for customer error by Stripe';
+      const message =
+        'Exception created subscription for customer error by Stripe';
       logger.error({
         correlationId,
         message,
@@ -380,7 +387,8 @@ export class StripeService {
 
       return customerInfo;
     } catch (error: any) {
-      const message = 'Exception updated default payment method for customer error by Stripe';
+      const message =
+        'Exception updated default payment method for customer error by Stripe';
       logger.error({
         correlationId,
         message,

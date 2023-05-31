@@ -32,16 +32,25 @@ export class MessageCreateAction {
       fileAttached,
       typeMessage,
     } = payload;
-    const subscribers = await this.formSubmissionFindByPhoneNumberAction.execute(
-      context,
-      convertStringToPhoneNumber(isSubscriberMessage ? phoneNumberSent : phoneNumberReceipted),
-    );
+    const subscribers =
+      await this.formSubmissionFindByPhoneNumberAction.execute(
+        context,
+        convertStringToPhoneNumber(
+          isSubscriberMessage ? phoneNumberSent : phoneNumberReceipted,
+        ),
+      );
 
     const userModel = await this.userFindByPhoneSystemAction.execute(
-      convertStringToPhoneNumber(isSubscriberMessage ? phoneNumberReceipted : phoneNumberSent),
+      convertStringToPhoneNumber(
+        isSubscriberMessage ? phoneNumberReceipted : phoneNumberSent,
+      ),
     );
     const subscriber = this.getSubcriberByOwner(subscribers, userModel[0]);
-    const type = typeMessage ? typeMessage : fileAttached ? TYPE_MESSAGE.MMS : undefined;
+    const type = typeMessage
+      ? typeMessage
+      : fileAttached
+      ? TYPE_MESSAGE.MMS
+      : undefined;
 
     return new this.messageModel({
       ...payload,
@@ -51,8 +60,13 @@ export class MessageCreateAction {
     }).save();
   }
 
-  private getSubcriberByOwner(subscribers: FormSubmissionDocument[], owner: UserDocument) {
-    const subs = subscribers.filter((sub) => sub.owner.toString() === owner._id.toString());
+  private getSubcriberByOwner(
+    subscribers: FormSubmissionDocument[],
+    owner: UserDocument,
+  ) {
+    const subs = subscribers.filter(
+      (sub) => sub.owner.toString() === owner._id.toString(),
+    );
     return subs[0];
   }
 }

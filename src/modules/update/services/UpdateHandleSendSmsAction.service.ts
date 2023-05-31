@@ -68,10 +68,10 @@ export class UpdateHandleSendSmsAction {
     const { logger } = context;
 
     const timeTriggerSchedule = new Date();
-    console.log('Outside promise.all');
+    // console.log('Outside promise.all');
     await Promise.all(
       subscribers.map(async (sub) => {
-        console.log('Inside promise.all');
+        // console.log('Inside promise.all');
         const { phoneNumber, firstName, lastName, email, _id } = sub;
 
         const subscriber = await this.formSubmissionFindByIdAction.execute(

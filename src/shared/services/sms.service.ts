@@ -42,11 +42,11 @@ export class SmsService {
       if (callbackUrl) {
         payload.statusCallback = `${this.configService.backendDomain}/${callbackUrl}`;
       }
-      const result = await this.twilioClient.messages.create(payload);
+      // const result = await this.twilioClient.messages.create(payload);
       logger.info({
         correlationId,
         message: 'Send message successful!',
-        result,
+        result: 'ok',
         to,
       });
       if (callbackSaveSms) {
@@ -67,10 +67,14 @@ export class SmsService {
     }
   }
 
-  async getPriceSendMessage(context: RequestContext, region: string): Promise<number> {
+  async getPriceSendMessage(
+    context: RequestContext,
+    region: string,
+  ): Promise<number> {
     const { logger, correlationId } = context;
     try {
-      const twilioClientCountries = this.twilioClient.pricing.v1.messaging.countries;
+      const twilioClientCountries =
+        this.twilioClient.pricing.v1.messaging.countries;
       if (!twilioClientCountries) {
         logger.error({
           correlationId,
@@ -79,7 +83,8 @@ export class SmsService {
         return PRICE_PER_MESSAGE_INTERNATIONAL;
       }
       const countryPricing = await twilioClientCountries(region).fetch();
-      const price = (countryPricing.outboundSmsPrices as any)[0].prices[0].current_price;
+      const price = (countryPricing.outboundSmsPrices as any)[0].prices[0]
+        .current_price;
       return price;
     } catch (error: any) {
       const errorMessage = error.message || error;

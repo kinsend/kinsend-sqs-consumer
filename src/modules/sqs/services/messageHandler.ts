@@ -1,7 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SqsMessageHandler } from '@ssut/nestjs-sqs';
 import * as dotenv from 'dotenv';
-import { FormSubmissionUpdateLastContactedAction } from 'src/modules/form.submission/services/FormSubmissionUpdateLastContactedAction.service';
 import { UpdateHandleSendSmsAction } from 'src/modules/update/services/UpdateHandleSendSmsAction.service';
 import { UpdateUpdateProgressAction } from 'src/modules/update/services/UpdateUpdateProgressAction.service';
 import { LinkRediectCreateByMessageAction } from 'src/modules/update/services/link.redirect/LinkRediectCreateByMessageAction.service';
@@ -37,16 +36,16 @@ export class MessageHandler {
     let msg: any = body.message;
     msg = JSON.parse(msg);
     const { subscribers, ownerPhoneNumber, update, scheduleName } = msg.message;
-    console.log(
-      'subscribers',
-      subscribers,
-      'ownerPhoneNumber',
-      ownerPhoneNumber,
-      'update',
-      update,
-      'scheduleName',
-      scheduleName,
-    );
+    // console.log(
+    //   'subscribers',
+    //   subscribers,
+    //   'ownerPhoneNumber',
+    //   ownerPhoneNumber,
+    //   'update',
+    //   update,
+    //   'scheduleName',
+    //   scheduleName,
+    // );
     const context: RequestContext = {
       logger: rootLogger,
       correlationId: '',
@@ -68,14 +67,15 @@ export class MessageHandler {
       Logger.error('scheduleName not found');
     }
     // const tempNumber = '+19179058788';
-    const tempNumber = '+13613064427';
+    // const tempNumber = '+13613064427';
     this.updateHandleSendSmsAction.handleSendSms(
       context,
       this.linkRediectCreateByMessageAction,
       // this.formSubmissionUpdateLastContactedAction,
       this.updateUpdateProgressAction,
       this.smsService,
-      tempNumber,
+      // tempNumber,
+      ownerPhoneNumber,
       subscribers,
       update,
       scheduleName,

@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-array-for-each */
 /* eslint-disable no-param-reassign */
 /* eslint-disable new-cap */
 import { Injectable } from '@nestjs/common';
@@ -11,9 +10,15 @@ import { Update, UpdateDocument } from '../update.schema';
 
 @Injectable()
 export class UpdateUpdateProgressAction {
-  constructor(@InjectModel(Update.name) private updateModel: Model<UpdateDocument>) {}
+  constructor(
+    @InjectModel(Update.name) private updateModel: Model<UpdateDocument>,
+  ) {}
 
-  async execute(context: RequestContext, id: string, progress: UPDATE_PROGRESS): Promise<void> {
+  async execute(
+    context: RequestContext,
+    id: string,
+    progress: UPDATE_PROGRESS,
+  ): Promise<void> {
     const update = await this.updateModel.findById(id);
     if (!update) {
       throw new NotFoundException('Update', 'Update not found!');

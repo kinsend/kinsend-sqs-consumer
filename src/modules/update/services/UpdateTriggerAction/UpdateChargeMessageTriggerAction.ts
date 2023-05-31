@@ -36,14 +36,23 @@ export class UpdateChargeMessageTriggerAction {
     private paymentSendInvoiceAction: PaymentSendInvoiceAction,
   ) {}
 
-  async execute(context: RequestContext, updateId: string, datetimeTrigger: Date): Promise<void> {
+  async execute(
+    context: RequestContext,
+    updateId: string,
+    datetimeTrigger: Date,
+  ): Promise<void> {
     const { logger } = context;
     logger.info('Charge message after trigger.');
 
     const { user } = context;
     const userModel = await this.userFindByIdAction.execute(context, user.id);
     const [messageDomestic, mms] = await Promise.all([
-      this.handleMessages(context, updateId, datetimeTrigger, TYPE_MESSAGE.MESSAGE_UPDATE_DOMESTIC),
+      this.handleMessages(
+        context,
+        updateId,
+        datetimeTrigger,
+        TYPE_MESSAGE.MESSAGE_UPDATE_DOMESTIC,
+      ),
       this.handleMessages(context, updateId, datetimeTrigger, TYPE_MESSAGE.MMS),
     ]);
     const messageInternational = await this.handleMessages(
@@ -52,7 +61,10 @@ export class UpdateChargeMessageTriggerAction {
       datetimeTrigger,
       TYPE_MESSAGE.MESSAGE_UPDATE_INTERNATIONAL,
     );
-    const totalFee = messageDomestic.totalPrice + messageInternational.totalPrice + mms.totalPrice;
+    const totalFee =
+      messageDomestic.totalPrice +
+      messageInternational.totalPrice +
+      mms.totalPrice;
     const messages = await this.totalMessage(updateId, datetimeTrigger);
     logger.info(
       `messageDomestic: ${messageDomestic.totalPrice}, mms: ${mms.totalPrice}, totalFee: ${totalFee}`,
@@ -95,7 +107,10 @@ export class UpdateChargeMessageTriggerAction {
     context.logger.info('Total fee less limit. Skip it');
   }
 
-  private async verifyPriceCharge(context: RequestContext, totalFee: number): Promise<boolean> {
+  private async verifyPriceCharge(
+    context: RequestContext,
+    totalFee: number,
+  ): Promise<boolean> {
     // ex: totalFee <= 5 $ids
     if (totalFee <= PRICE_ATTACH_CHARGE * RATE_CENT_USD) {
       return false;
@@ -108,7 +123,10 @@ export class UpdateChargeMessageTriggerAction {
     fee: number,
     stripeCustomerUserId: string,
     description: string,
-  ): Promise<{ numberCard: string; bill: Stripe.Response<Stripe.PaymentIntent> }> {
+  ): Promise<{
+    numberCard: string;
+    bill: Stripe.Response<Stripe.PaymentIntent>;
+  }> {
     const paymentMethod = await this.stripeService.listStoredCreditCards(
       context,
       stripeCustomerUserId,
@@ -148,7 +166,10 @@ export class UpdateChargeMessageTriggerAction {
     });
   }
 
-  private async totalMessage(updateId: string, datetimeTrigger: Date): Promise<MessageDocument[]> {
+  private async totalMessage(
+    updateId: string,
+    datetimeTrigger: Date,
+  ): Promise<MessageDocument[]> {
     const messages = await this.messageFindByConditionAction.execute({
       updateId,
       status: 'success',
@@ -176,13 +197,18 @@ export class UpdateChargeMessageTriggerAction {
       typeMessage === TYPE_MESSAGE.MESSAGE_UPDATE_DOMESTIC ||
       typeMessage === TYPE_MESSAGE.MESSAGE_DOMESTIC
     ) {
-      totalPrice += messages.length * (PRICE_PER_MESSAGE_DOMESTIC * RATE_CENT_USD);
+      totalPrice +=
+        messages.length * (PRICE_PER_MESSAGE_DOMESTIC * RATE_CENT_USD);
     } else if (typeMessage === TYPE_MESSAGE.MMS) {
-      totalPrice += messages.length * this.configService.priceMMS * RATE_CENT_USD;
+      totalPrice +=
+        messages.length * this.configService.priceMMS * RATE_CENT_USD;
     } else {
       // International
       for await (const message of messages) {
-        const price = await this.handlePricePerMessage(context, message.phoneNumberReceipted);
+        const price = await this.handlePricePerMessage(
+          context,
+          message.phoneNumberReceipted,
+        );
         totalPrice += Number(price) * 2;
       }
     }
@@ -193,7 +219,10 @@ export class UpdateChargeMessageTriggerAction {
     };
   }
 
-  private async handlePricePerMessage(context: RequestContext, phone: string): Promise<number> {
+  private async handlePricePerMessage(
+    context: RequestContext,
+    phone: string,
+  ): Promise<number> {
     const region = regionPhoneNumber(phone);
     if (!region) return PRICE_PER_MESSAGE_INTERNATIONAL;
     const price = await this.smsService.getPriceSendMessage(context, region);
