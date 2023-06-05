@@ -38,7 +38,7 @@ This will start the application in development mode and listen for incoming SQS 
 
 As a microservice, `kinsend-sqs-consumer` does not require a client app to connect to it. Instead, it will directly listen to the specified SQS queue for incoming messages. 
 
-When a message is received, the microservice will output the message content to the console.
+When a message is received, the microservice will translate the message and will send an email to all the subscribers.
 
 ## Note
 
