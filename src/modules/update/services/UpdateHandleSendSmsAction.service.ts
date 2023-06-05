@@ -32,11 +32,15 @@ import { UpdateDocument } from '../update.schema';
 import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
 import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
 import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
+import { MailSendGridService } from 'src/modules/mail/mail-send-grid.service';
+import { ConfigService } from '../../../configs/config.service';
 
 @Injectable()
 export class UpdateHandleSendSmsAction {
   constructor(
     private formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
+    private mailService: MailSendGridService,
+    private readonly configService: ConfigService,
   ) {}
 
   // private readonly sqsService: SqsService;
@@ -109,22 +113,36 @@ export class UpdateHandleSendSmsAction {
           ownerPhoneNumber,
         );
 
-        return smsService.sendMessage(
-          context,
-          ownerPhoneNumber,
-          messageFilled,
-          update.fileUrl,
-          to,
-          `api/hook/sms/update/status/${update.id}`,
-          this.saveSms(
-            context,
-            ownerPhoneNumber,
-            to,
-            messageFilled,
-            update.fileUrl,
-            update.id,
-          ),
-        );
+        const { mailForm: mailFrom } = this.configService;
+
+        const mail = {
+          to: email,
+          subject: 'Kinsend - SQS Test',
+          from: mailFrom,
+          html: `<p>Sending message to ${
+            firstName + ' ' + lastName
+          }. Email: ${email}</p>`,
+        };
+
+        Logger.log(`Sending email to ${email}`);
+        await this.mailService.sendTestMail(mail);
+
+        // return smsService.sendMessage(
+        //   context,
+        //   ownerPhoneNumber,
+        //   messageFilled,
+        //   update.fileUrl,
+        //   to,
+        //   `api/hook/sms/update/status/${update.id}`,
+        //   this.saveSms(
+        //     context,
+        //     ownerPhoneNumber,
+        //     to,
+        //     messageFilled,
+        //     update.fileUrl,
+        //     update.id,
+        //   ),
+        // );
       }),
     );
     if (update.triggerType === INTERVAL_TRIGGER_TYPE.ONCE) {
