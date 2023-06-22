@@ -1,6 +1,6 @@
 # kinsend-sqs-consumer
 
-`kinsend-sqs-consumer` is a microservice built using NestJS, that listens to an Amazon SQS queue and outputs messages to the console.
+`kinsend-sqs-consumer` is a microservice built using NestJS. It consumes Amazon SQS queue events and reacts to them while outputting messages to the console.
 
 ## Installation
 
