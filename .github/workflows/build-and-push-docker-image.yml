@@ -82,7 +82,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: arn:aws:iam::202337591493:role/kinsend-infra
+          role-to-assume: arn:aws:iam::${{ steps.vars.outputs.accountId }}:role/kinsend-${{ steps.vars.outputs.roleId }}
           role-skip-session-tagging: true
           role-duration-seconds: 900
 
