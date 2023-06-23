@@ -22,3 +22,4 @@ RUN set -x && \
 EXPOSE 3000/tcp
 
 ENTRYPOINT [ "npm", "run", "start:dev" ]
+
