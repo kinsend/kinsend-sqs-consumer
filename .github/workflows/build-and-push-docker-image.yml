@@ -58,10 +58,12 @@ jobs:
           echo "Ref => $ref"
           
           accountId=${{ env.DEV_AWS_ACCOUNT_ID }}
+          roleId="dev"
           version=1.0.0-${{ env.IMAGE_REF }}
 
           if [[ "$ref" == "master" || "$ref" == "main" ]]; then
             accountId=${{ env.PROD_AWS_ACCOUNT_ID }};
+            roleId="prod"
             version=1.0.0-master-${{ steps.commit.outputs.short }}
           fi
           if [[ "$ref" == "develop" ]]; then
