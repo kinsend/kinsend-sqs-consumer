@@ -99,11 +99,11 @@ jobs:
         run: |
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.vars.outputs.registry }}
 
-      - name: Build the kinsend-be Docker image
+      - name: Build ${{ steps.vars.outputs.image }}
         run: |
-          docker build -t ${{ steps.vars.outputs.image }} .
+          docker build --no-cache -t ${{ steps.vars.outputs.image }} .
 
-      - name: Push the kinsend-be Docker image
+      - name: Push ${{ steps.vars.outputs.image }}
         run: |
           docker push ${{ steps.vars.outputs.image }}
 
