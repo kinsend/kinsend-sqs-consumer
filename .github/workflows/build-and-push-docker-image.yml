@@ -83,6 +83,7 @@ jobs:
           echo "Image: ${image}"
           
           echo "accountId=$accountId" >> $GITHUB_OUTPUT 
+          echo "roleId=$roleId" >> $GITHUB_OUTPUT 
           echo "registry=$registry" >> $GITHUB_OUTPUT
           echo "image=$image" >> $GITHUB_OUTPUT
 
