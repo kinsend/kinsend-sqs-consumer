@@ -41,6 +41,7 @@ export class UpdateHandleSendSmsAction {
     private formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
     private mailService: MailSendGridService,
     private readonly configService: ConfigService,
+    private linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
   ) {}
 
   // private readonly sqsService: SqsService;
@@ -93,7 +94,6 @@ export class UpdateHandleSendSmsAction {
           update,
           sub,
           context,
-          linkRediectCreateByMessageAction,
         );
 
         const message = messageReview === null ? update.message : messageReview;
@@ -199,13 +199,13 @@ export class UpdateHandleSendSmsAction {
     update: UpdateDocument,
     subscriber: FormSubmission,
     context: RequestContext,
-    linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
+    // linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
   ) {
     const links = getLinksInMessage(update.message);
     if (links.length === 0) {
       return null;
     }
-    const linkCreated = await linkRediectCreateByMessageAction.execute(
+    const linkCreated = await this.linkRediectCreateByMessageAction.execute(
       context,
       update,
       subscriber as FormSubmissionDocument,
