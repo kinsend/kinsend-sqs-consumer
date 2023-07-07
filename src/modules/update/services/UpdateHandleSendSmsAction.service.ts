@@ -12,28 +12,27 @@ import {
   FormSubmissionDocument,
 } from 'src/modules/form.submission/form.submission.schema';
 
+import { REGION_DOMESTIC, TYPE_MESSAGE } from '../../../domain/const';
+import { SmsService } from '../../../shared/services/sms.service';
+import { RequestContext } from '../../../utils/RequestContext';
+import { MessageCreateAction } from '../../messages/services/MessageCreateAction.service';
 import {
   UpdateSchedule,
   UpdateScheduleDocument,
 } from '../update.schedule.schema';
-import { LinkRediectCreateByMessageAction } from './link.redirect/LinkRediectCreateByMessageAction.service';
-import { UpdateUpdateProgressAction } from './UpdateUpdateProgressAction.service';
-import { UpdateFindByIdWithoutReportingAction } from './UpdateFindByIdWithoutReportingAction.service';
-import { MessageCreateAction } from '../../messages/services/MessageCreateAction.service';
-import { RequestContext } from '../../../utils/RequestContext';
-import { SmsService } from '../../../shared/services/sms.service';
-import { REGION_DOMESTIC, TYPE_MESSAGE } from '../../../domain/const';
 import { UpdateChargeMessageTriggerAction } from './UpdateTriggerAction/UpdateChargeMessageTriggerAction';
+import { UpdateUpdateProgressAction } from './UpdateUpdateProgressAction.service';
+import { LinkRediectCreateByMessageAction } from './link.redirect/LinkRediectCreateByMessageAction.service';
 
 import { FormSubmissionFindByIdAction } from 'src/modules/form.submission/services/FormSubmissionFindByIdAction.service';
-import { getLinksInMessage } from 'src/utils/getLinksInMessage';
-import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessage';
-import { UpdateDocument } from '../update.schema';
-import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
-import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
-import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
 import { MailSendGridService } from 'src/modules/mail/mail-send-grid.service';
+import { getLinksInMessage } from 'src/utils/getLinksInMessage';
+import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
 import { ConfigService } from '../../../configs/config.service';
+import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessage';
+import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
+import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
+import { UpdateDocument } from '../update.schema';
 
 @Injectable()
 export class UpdateHandleSendSmsAction {
@@ -41,6 +40,7 @@ export class UpdateHandleSendSmsAction {
     private formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
     private mailService: MailSendGridService,
     private readonly configService: ConfigService,
+    @Inject(LinkRediectCreateByMessageAction)
     private linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
   ) {}
 
@@ -126,6 +126,7 @@ export class UpdateHandleSendSmsAction {
 
         Logger.log(`Sending email to ${email}`);
         await this.mailService.sendTestMail(mail);
+        Logger.log(`Saving SMS to the database`);
 
         // return smsService.sendMessage(
         //   context,

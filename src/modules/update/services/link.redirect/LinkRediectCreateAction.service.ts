@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-array-for-each */
 /* eslint-disable new-cap */
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -12,7 +11,8 @@ import { UpdateDocument } from '../../update.schema';
 @Injectable()
 export class LinkRediectCreateAction {
   constructor(
-    @InjectModel(LinkRedirect.name) private linkRedirectModel: Model<LinkRedirectDocument>,
+    @InjectModel(LinkRedirect.name)
+    private linkRedirectModel: Model<LinkRedirectDocument>,
   ) {}
 
   async execute(
