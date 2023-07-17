@@ -57,7 +57,7 @@ export class SmsService {
 
       logger.error({
         correlationId,
-        message: 'Send message fail!',
+        message: 'Send message fail to ' + to,
         error: errorMessage,
         to,
       });
