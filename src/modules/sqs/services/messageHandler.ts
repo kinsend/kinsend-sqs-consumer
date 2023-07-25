@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SqsMessageHandler } from '@ssut/nestjs-sqs';
 import * as dotenv from 'dotenv';
+import { UpdateFindByIdAction } from 'src/modules/update/services/UpdateFindByIdAction.service';
 import { UpdateHandleSendSmsAction } from 'src/modules/update/services/UpdateHandleSendSmsAction.service';
 import { UpdateUpdateProgressAction } from 'src/modules/update/services/UpdateUpdateProgressAction.service';
 import { LinkRediectCreateByMessageAction } from 'src/modules/update/services/link.redirect/LinkRediectCreateByMessageAction.service';
@@ -26,6 +27,9 @@ export class MessageHandler {
     private updateUpdateProgressAction: UpdateUpdateProgressAction,
 
     @Inject(SmsService) private smsService: SmsService,
+
+    @Inject(UpdateFindByIdAction)
+    private updateFindByIdAction: UpdateFindByIdAction,
   ) {}
 
   @SqsMessageHandler('kinsend-dev')
@@ -35,7 +39,12 @@ export class MessageHandler {
     body = JSON.parse(body) as any;
     let msg: any = body.message;
     msg = JSON.parse(msg);
-    const { subscribers, ownerPhoneNumber, update, scheduleName } = msg.message;
+    const {
+      subscribers,
+      ownerPhoneNumber,
+      update: updateId,
+      scheduleName,
+    } = msg.message;
     // console.log(
     //   'subscribers',
     //   subscribers,
@@ -51,7 +60,7 @@ export class MessageHandler {
       correlationId: '',
       user: {},
     };
-    if (!update) {
+    if (!updateId) {
       Logger.error('update not found');
     }
     if (!ownerPhoneNumber) {
@@ -66,6 +75,13 @@ export class MessageHandler {
     if (!scheduleName) {
       Logger.error('scheduleName not found');
     }
+
+    const update = await this.updateFindByIdAction.execute(context, updateId);
+
+    if (!update) {
+      Logger.error('update not found');
+    }
+
     // const tempNumber = '+19179058788';
     // const tempNumber = '+13613064427';
     this.updateHandleSendSmsAction.handleSendSms(

@@ -24,6 +24,7 @@ import { UpdateChargeMessageTriggerAction } from './UpdateTriggerAction/UpdateCh
 import { UpdateUpdateProgressAction } from './UpdateUpdateProgressAction.service';
 import { LinkRediectCreateByMessageAction } from './link.redirect/LinkRediectCreateByMessageAction.service';
 
+import * as os from 'os';
 import { FormSubmissionFindByIdAction } from 'src/modules/form.submission/services/FormSubmissionFindByIdAction.service';
 import { MailSendGridService } from 'src/modules/mail/mail-send-grid.service';
 import { getLinksInMessage } from 'src/utils/getLinksInMessage';
@@ -113,19 +114,19 @@ export class UpdateHandleSendSmsAction {
           ownerPhoneNumber,
         );
 
-        const { mailForm: mailFrom } = this.configService;
+        // const { mailForm: mailFrom } = this.configService;
 
-        const mail = {
-          to: email,
-          subject: 'Kinsend - SQS Test',
-          from: mailFrom,
-          html: `<p>Sending message to ${
-            firstName + ' ' + lastName
-          }. Email: ${email}</p>`,
-        };
+        // const mail = {
+        //   to: email,
+        //   subject: 'Kinsend - SQS Test',
+        //   from: mailFrom,
+        //   html: `<p>Sending message to ${
+        //     firstName + ' ' + lastName
+        //   }. Email: ${email}</p>`,
+        // };
 
-        Logger.log(`Sending email to ${email}`);
-        await this.mailService.sendTestMail(mail);
+        Logger.log(`${os.hostname()}-${email}`);
+        // await this.mailService.sendTestMail(mail);
         Logger.log(`Saving SMS to the database`);
 
         // return smsService.sendMessage(
