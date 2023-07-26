@@ -34,6 +34,8 @@ import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessag
 import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
 import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
 import { UpdateDocument } from '../update.schema';
+import { AWSCloudWatchLoggerService } from 'src/modules/aws/services/aws-cloudwatch-logger.service';
+import { exec } from 'child_process';
 
 @Injectable()
 export class UpdateHandleSendSmsAction {
@@ -43,6 +45,8 @@ export class UpdateHandleSendSmsAction {
     private readonly configService: ConfigService,
     @Inject(LinkRediectCreateByMessageAction)
     private linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
+    @Inject(AWSCloudWatchLoggerService)
+    private awsCloudWatchLoggerService: AWSCloudWatchLoggerService,
   ) {}
 
   // private readonly sqsService: SqsService;
@@ -79,6 +83,8 @@ export class UpdateHandleSendSmsAction {
       subscribers.map(async (sub) => {
         // console.log('Inside promise.all');
         const { phoneNumber, firstName, lastName, email, _id } = sub;
+
+        Logger.log(`Sending message to ${email}`);
 
         const subscriber = await this.formSubmissionFindByIdAction.execute(
           context,
@@ -125,9 +131,41 @@ export class UpdateHandleSendSmsAction {
         //   }. Email: ${email}</p>`,
         // };
 
-        Logger.log(`${os.hostname()}-${email}`);
+        const command = 'cat /proc/1/cpuset';
+        const logGroup = 'kinsend-sqs-consumer';
+        let hostname = '';
+        try {
+          hostname = await new Promise((resolve, reject) => {
+            exec(command, (err, stdout, stderr) => {
+              if (err) {
+                console.log(`Error running command ${command}`, err);
+                return reject(err);
+              }
+              if (stderr) {
+                console.log(`stderr running command ${command}`, stderr);
+                return reject(stderr);
+              }
+              if (stdout.trim().includes('docker'))
+                return resolve(stdout.trim().split('/')[2]);
+              return resolve('');
+            });
+          });
+        } catch (error) {
+          hostname = os.hostname();
+        }
+        // Additional step of error handling
+        if (hostname === '') hostname = os.hostname();
+        this.awsCloudWatchLoggerService.putLogEvent(
+          logGroup,
+          `${hostname}-${email}`,
+          messageFilled,
+        );
+        this.awsCloudWatchLoggerService.putLogEvent(
+          logGroup,
+          `${hostname}-${email}`,
+          'Saving SMS to the database',
+        );
         // await this.mailService.sendTestMail(mail);
-        Logger.log(`Saving SMS to the database`);
 
         // return smsService.sendMessage(
         //   context,

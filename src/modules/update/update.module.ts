@@ -30,11 +30,14 @@ import {
 } from './update.reporting.schema';
 import { UpdateSchedule, UpdateScheduleSchema } from './update.schedule.schema';
 import { Update, UpdateSchema } from './update.schema';
+import { AWSCloudWatchLoggerService } from '../aws/services/aws-cloudwatch-logger.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   controllers: [],
   imports: [
     SharedModule,
+    ConfigModule,
     MongooseModule.forFeature([
       { name: Update.name, schema: UpdateSchema },
       { name: LinkRedirect.name, schema: LinkRedirectSchema },
@@ -54,6 +57,8 @@ import { Update, UpdateSchema } from './update.schema';
     AWSModule,
   ],
   providers: [
+    AWSCloudWatchLoggerService,
+    ConfigService,
     LinkRediectCreateAction,
     LinkRediectCreateByMessageAction,
     LinkRedirectFinddByUpdateIdAction,

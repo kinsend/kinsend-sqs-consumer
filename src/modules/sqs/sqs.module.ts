@@ -51,6 +51,7 @@ import { Update, UpdateSchema } from '../update/update.schema';
 import { UserFindByIdAction } from '../user/services/UserFindByIdAction.service';
 import { UserFindByPhoneSystemAction } from '../user/services/UserFindByPhoneSystemAction.service';
 import { User, UserSchema } from '../user/user.schema';
+import { AWSCloudWatchLoggerService } from '../aws/services/aws-cloudwatch-logger.service';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { User, UserSchema } from '../user/user.schema';
   ],
   controllers: [],
   providers: [
+    AWSCloudWatchLoggerService,
     ConfigService,
     FormSubmissionUpdateLastContactedAction,
     FormSubmissionFindByPhoneNumberAction,
