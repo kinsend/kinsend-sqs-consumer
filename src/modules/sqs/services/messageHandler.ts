@@ -42,6 +42,7 @@ export class MessageHandler {
     const {
       subscribers,
       ownerPhoneNumber,
+      ownerEmail,
       update: updateId,
       scheduleName,
     } = msg.message;
@@ -66,6 +67,9 @@ export class MessageHandler {
     if (!ownerPhoneNumber) {
       Logger.error('ownerPhoneNumber not found');
     }
+    if (!ownerEmail) {
+      Logger.error('ownerEmail not found');
+    }
     if (!subscribers) {
       Logger.error('subscribers not found');
     }
@@ -75,6 +79,12 @@ export class MessageHandler {
     if (!scheduleName) {
       Logger.error('scheduleName not found');
     }
+
+    Logger.log('UpdateID', updateId);
+    Logger.log('OwnerPhoneNumber', ownerPhoneNumber);
+    Logger.log('OwnerEmail', ownerEmail);
+    Logger.log('Subscribers', subscribers);
+    Logger.log('ScheduleName', scheduleName);
 
     const update = await this.updateFindByIdAction.execute(context, updateId);
 
@@ -92,6 +102,7 @@ export class MessageHandler {
       this.smsService,
       // tempNumber,
       ownerPhoneNumber,
+      ownerEmail,
       subscribers,
       update,
       scheduleName,

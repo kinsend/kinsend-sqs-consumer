@@ -70,6 +70,7 @@ export class UpdateHandleSendSmsAction {
     smsService: SmsService,
     // updateFindByIdWithoutReportingAction: UpdateFindByIdWithoutReportingAction,
     ownerPhoneNumber: string,
+    ownerEmail: string,
     subscribers: FormSubmission[],
     update: UpdateDocument,
     // datetimeTrigger: Date,
@@ -155,16 +156,15 @@ export class UpdateHandleSendSmsAction {
         }
         // Additional step of error handling
         if (hostname === '') hostname = os.hostname();
-        this.awsCloudWatchLoggerService.putLogEvent(
-          logGroup,
-          `${hostname}-${email}`,
-          messageFilled,
-        );
-        this.awsCloudWatchLoggerService.putLogEvent(
-          logGroup,
-          `${hostname}-${email}`,
-          'Saving SMS to the database',
-        );
+        try {
+          this.awsCloudWatchLoggerService.putLogEvent(
+            logGroup,
+            `${hostname}-${ownerEmail}`,
+            `Sending message to ${email}.\nMessage Content: ${messageFilled}`,
+          );
+        } catch (error) {
+          Logger.error(`Could not send log to cloudwatch ${error}`);
+        }
         // await this.mailService.sendTestMail(mail);
 
         // return smsService.sendMessage(
