@@ -37,7 +37,7 @@ import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessag
 import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
 import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
 import { UpdateDocument } from '../update.schema';
-import * as util from "util";
+import * as util from 'util';
 
 @Injectable()
 export class UpdateHandleSendSmsAction {
@@ -116,18 +116,31 @@ export class UpdateHandleSendSmsAction {
 
         const testEmails: string[] = this.configService.testEmails;
         const isTestEmail = testEmails.includes(ownerEmail);
-
+        Logger.log('Test Emails', testEmails);
+        Logger.log('Email', ownerEmail);
+        Logger.log('Is Test Email', isTestEmail);
         const logGroup = 'kinsend-sqs-consumer';
         const hostname = await getHostname();
         const logStream = getLogStream(hostname, email);
-        const logMessage = util.format("Sending message to %s%s\nMessage Content: %s", to, (isTestEmail ? '\nSMS SKIPPED - test email detected' : ''), messageFilled)
+        const logMessage = util.format(
+          'Sending message to %s%s\nMessage Content: %s',
+          to,
+          isTestEmail ? '\nSMS SKIPPED - test email detected' : '',
+          messageFilled,
+        );
+        Logger.log(logMessage);
 
-        putLogEvent(this.awsCloudWatchLoggerService, logGroup, logStream, logMessage);
+        putLogEvent(
+          this.awsCloudWatchLoggerService,
+          logGroup,
+          logStream,
+          logMessage,
+        );
 
         if (isTestEmail) {
-            // Prevent sending SMS messages when test email has been used.
-            // This is used for SQS testing.
-            return;
+          // Prevent sending SMS messages when test email has been used.
+          // This is used for SQS testing.
+          return;
         }
 
         return smsService.sendMessage(
