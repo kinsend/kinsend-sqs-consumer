@@ -24,18 +24,19 @@ import { UpdateChargeMessageTriggerAction } from './UpdateTriggerAction/UpdateCh
 import { UpdateUpdateProgressAction } from './UpdateUpdateProgressAction.service';
 import { LinkRediectCreateByMessageAction } from './link.redirect/LinkRediectCreateByMessageAction.service';
 
-import * as os from 'os';
+import { AWSCloudWatchLoggerService } from 'src/modules/aws/services/aws-cloudwatch-logger.service';
 import { FormSubmissionFindByIdAction } from 'src/modules/form.submission/services/FormSubmissionFindByIdAction.service';
 import { MailSendGridService } from 'src/modules/mail/mail-send-grid.service';
+import { getHostname } from 'src/utils/getHostname';
 import { getLinksInMessage } from 'src/utils/getLinksInMessage';
+import { getLogStream } from 'src/utils/getLogStream';
+import { putLogEvent } from 'src/utils/putLogEvent';
 import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
 import { ConfigService } from '../../../configs/config.service';
 import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessage';
 import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
 import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
 import { UpdateDocument } from '../update.schema';
-import { AWSCloudWatchLoggerService } from 'src/modules/aws/services/aws-cloudwatch-logger.service';
-import { exec } from 'child_process';
 
 @Injectable()
 export class UpdateHandleSendSmsAction {
@@ -49,8 +50,6 @@ export class UpdateHandleSendSmsAction {
     private awsCloudWatchLoggerService: AWSCloudWatchLoggerService,
   ) {}
 
-  // private readonly sqsService: SqsService;
-
   @Inject(MessageCreateAction) private messageCreateAction: MessageCreateAction;
   @Inject(UpdateChargeMessageTriggerAction)
   private updateChargeMessageTriggerAction: UpdateChargeMessageTriggerAction;
@@ -58,31 +57,25 @@ export class UpdateHandleSendSmsAction {
   @InjectModel(UpdateSchedule.name)
   private updateScheduleModel: Model<UpdateScheduleDocument>;
 
-  // Created
   @Inject(FormSubmissionFindByIdAction)
   private formSubmissionFindByIdAction: FormSubmissionFindByIdAction;
 
   async handleSendSms(
     context: RequestContext,
     linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
-    // formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
     updateUpdateProgressAction: UpdateUpdateProgressAction,
     smsService: SmsService,
-    // updateFindByIdWithoutReportingAction: UpdateFindByIdWithoutReportingAction,
     ownerPhoneNumber: string,
     ownerEmail: string,
     subscribers: FormSubmission[],
     update: UpdateDocument,
-    // datetimeTrigger: Date,
     scheduleName: string,
   ): Promise<void> {
     const { logger } = context;
 
     const timeTriggerSchedule = new Date();
-    // console.log('Outside promise.all');
     await Promise.all(
       subscribers.map(async (sub) => {
-        // console.log('Inside promise.all');
         const { phoneNumber, firstName, lastName, email, _id } = sub;
 
         Logger.log(`Sending message to ${email}`);
@@ -114,75 +107,39 @@ export class UpdateHandleSendSmsAction {
           email,
         });
 
-        // Note: run async for update lastContacted
         this.formSubmissionUpdateLastContactedAction.execute(
           context,
           to,
           ownerPhoneNumber,
         );
 
-        // const { mailForm: mailFrom } = this.configService;
-
-        // const mail = {
-        //   to: email,
-        //   subject: 'Kinsend - SQS Test',
-        //   from: mailFrom,
-        //   html: `<p>Sending message to ${
-        //     firstName + ' ' + lastName
-        //   }. Email: ${email}</p>`,
-        // };
-
-        const command = 'cat /proc/1/cpuset';
         const logGroup = 'kinsend-sqs-consumer';
-        let hostname = '';
-        try {
-          hostname = await new Promise((resolve, reject) => {
-            exec(command, (err, stdout, stderr) => {
-              if (err) {
-                console.log(`Error running command ${command}`, err);
-                return reject(err);
-              }
-              if (stderr) {
-                console.log(`stderr running command ${command}`, stderr);
-                return reject(stderr);
-              }
-              if (stdout.trim().includes('docker'))
-                return resolve(stdout.trim().split('/')[2]);
-              return resolve('');
-            });
-          });
-        } catch (error) {
-          hostname = os.hostname();
-        }
-        // Additional step of error handling
-        if (hostname === '') hostname = os.hostname();
-        try {
-          this.awsCloudWatchLoggerService.putLogEvent(
-            logGroup,
-            `${hostname}-${ownerEmail}`,
-            `Sending message to ${email}.\nMessage Content: ${messageFilled}`,
-          );
-        } catch (error) {
-          Logger.error(`Could not send log to cloudwatch ${error}`);
-        }
-        // await this.mailService.sendTestMail(mail);
-
-        // return smsService.sendMessage(
-        //   context,
-        //   ownerPhoneNumber,
-        //   messageFilled,
-        //   update.fileUrl,
-        //   to,
-        //   `api/hook/sms/update/status/${update.id}`,
-        //   this.saveSms(
-        //     context,
-        //     ownerPhoneNumber,
-        //     to,
-        //     messageFilled,
-        //     update.fileUrl,
-        //     update.id,
-        //   ),
-        // );
+        const hostname = await getHostname();
+        const logStream = getLogStream(hostname, email);
+        putLogEvent(
+          this.awsCloudWatchLoggerService,
+          logGroup,
+          logStream,
+          `Sending message to ${to}.\nMessage Content: ${messageFilled}`,
+        );
+        const testEmails: string[] = this.configService.testEmails;
+        if (testEmails.includes(ownerEmail)) return;
+        return smsService.sendMessage(
+          context,
+          ownerPhoneNumber,
+          messageFilled,
+          update.fileUrl,
+          to,
+          `api/hook/sms/update/status/${update.id}`,
+          this.saveSms(
+            context,
+            ownerPhoneNumber,
+            to,
+            messageFilled,
+            update.fileUrl,
+            update.id,
+          ),
+        );
       }),
     );
     if (update.triggerType === INTERVAL_TRIGGER_TYPE.ONCE) {
