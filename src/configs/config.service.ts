@@ -424,11 +424,7 @@ export class ConfigService {
   }
 
   get testEmails(): string[] {
-    try {
-      return JSON.parse(this.envConfig['TEST_EMAILS']).emails;
-    } catch (error) {
-      console.log('error', error);
-      return [];
-    }
+    if (!this.envConfig['TEST_EMAILS']) return [];
+    return this.envConfig['TEST_EMAILS'].split(',');
   }
 }

@@ -123,7 +123,14 @@ export class UpdateHandleSendSmsAction {
           `Sending message to ${to}.\nMessage Content: ${messageFilled}`,
         );
         const testEmails: string[] = this.configService.testEmails;
-        if (testEmails.includes(ownerEmail)) return;
+        if (testEmails.includes(ownerEmail)) {
+          putLogEvent(
+            this.awsCloudWatchLoggerService,
+            logGroup,
+            logStream,
+            'User in test email list, skipping sending SMS',
+          );
+        }
         return smsService.sendMessage(
           context,
           ownerPhoneNumber,
