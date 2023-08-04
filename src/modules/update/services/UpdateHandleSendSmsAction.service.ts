@@ -32,12 +32,12 @@ import { getLinksInMessage } from 'src/utils/getLinksInMessage';
 import { getLogStream } from 'src/utils/getLogStream';
 import { putLogEvent } from 'src/utils/putLogEvent';
 import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
-import { ConfigService } from '../../../configs/config.service';
 import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessage';
 import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
 import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
 import { UpdateDocument } from '../update.schema';
 import * as util from 'util';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UpdateHandleSendSmsAction {
@@ -114,11 +114,9 @@ export class UpdateHandleSendSmsAction {
           ownerPhoneNumber,
         );
 
-        const testEmails: string[] = this.configService.testEmails;
+        const testEmails: string[] = this.configService.get('app.test_emails');
         const isTestEmail = testEmails.includes(ownerEmail);
-        Logger.log('Test Emails', testEmails);
-        Logger.log('Email', ownerEmail);
-        Logger.log('Is Test Email', isTestEmail);
+        Logger.log('Test Email?', isTestEmail);
         const logGroup = 'kinsend-sqs-consumer';
         const hostname = await getHostname();
         const logStream = getLogStream(hostname, email);
@@ -128,8 +126,6 @@ export class UpdateHandleSendSmsAction {
           isTestEmail ? '\nSMS SKIPPED - test email detected' : '',
           messageFilled,
         );
-        Logger.log(logMessage);
-
         putLogEvent(
           this.awsCloudWatchLoggerService,
           logGroup,
