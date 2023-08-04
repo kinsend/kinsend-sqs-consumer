@@ -119,7 +119,7 @@ export class UpdateHandleSendSmsAction {
         Logger.log('Test Email?', isTestEmail);
         const logGroup = 'kinsend-sqs-consumer';
         const hostname = await getHostname();
-        const logStream = getLogStream(hostname, email);
+        const logStream = getLogStream(hostname, ownerEmail);
         const logMessage = util.format(
           'Sending message to %s%s\nMessage Content: %s',
           to,
