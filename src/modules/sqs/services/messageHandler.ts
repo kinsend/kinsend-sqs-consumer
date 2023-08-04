@@ -32,7 +32,7 @@ export class MessageHandler {
     private userFindByIdAction: UserFindByIdAction,
   ) {}
 
-  @SqsMessageHandler('kinsend-dev')
+  @SqsMessageHandler(process.env.AWS_SQS_NAME)
   async handleMessage(message: AWS.SQS.Message) {
     let body: any = message.Body;
     body = JSON.parse(body) as any;
