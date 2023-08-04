@@ -42,7 +42,7 @@ export class SmsService {
       if (callbackUrl) {
         payload.statusCallback = `${this.configService.backendDomain}/${callbackUrl}`;
       }
-      // const result = await this.twilioClient.messages.create(payload);
+      const result = await this.twilioClient.messages.create(payload);
       logger.info({
         correlationId,
         message: 'Send message successful!',
