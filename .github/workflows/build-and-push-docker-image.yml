@@ -1,6 +1,6 @@
 # This Github workflow only builds a Docker image, it will not publish it to the AWS ECR private registry.
 name: build-and-push-docker-image
-run-name: Build and push docker image for ${{ inputs.BRANCH != '' && inputs.BRANCH || format('PR-{0}', github.event.client_payload.github.payload.issue.number) }}
+run-name: Build and push docker image for ${{ inputs.BRANCH != '' && inputs.BRANCH || format('PR-{0}-{1}', github.event.client_payload.github.payload.issue.number, github.event.client_payload.pull_request.head.sha) }}
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: kinsend-sqs-consumer
   GIT_REF: ${{ inputs.BRANCH != '' && inputs.BRANCH || github.event.client_payload.pull_request.head.sha }}
-  IMAGE_REF: ${{ inputs.BRANCH != '' && inputs.BRANCH || format('PR-{0}', github.event.client_payload.github.payload.issue.number) }}
+  IMAGE_REF: ${{ inputs.BRANCH != '' && inputs.BRANCH || format('PR-{0}-{1}', github.event.client_payload.github.payload.issue.number, github.event.client_payload.pull_request.head.sha) }}
 
 # These permissions are required to allow writing comments and reporting check status.
 permissions:
@@ -58,11 +58,18 @@ jobs:
           echo "Ref => $ref"
           
           accountId=${{ env.DEV_AWS_ACCOUNT_ID }}
+          roleId="dev"
           version=1.0.0-${{ env.IMAGE_REF }}
 
           if [[ "$ref" == "master" || "$ref" == "main" ]]; then
             accountId=${{ env.PROD_AWS_ACCOUNT_ID }};
+            roleId="prod"
             version=1.0.0-master-${{ steps.commit.outputs.short }}
+          fi
+          if [[ "$ref" == "develop" ]]; then
+            # We are not using "version", because for the `develop` branch the version is fixed to just `1.0.0-develop`
+            # without a hash to reduce the need for cleaning up old or one-time versions from ECR.
+            version=1.0.0-develop-${{ steps.commit.outputs.short }}
           fi
 
           registry="${accountId}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com"
@@ -70,11 +77,13 @@ jobs:
           image="${registry}/${repository}:${version}"
           
           echo "Account ID: ${accountId}"
+          echo "Role: ${roleId}"
           echo "Repository: ${repository}"
           echo "Version: ${version}"
           echo "Image: ${image}"
           
           echo "accountId=$accountId" >> $GITHUB_OUTPUT 
+          echo "roleId=$roleId" >> $GITHUB_OUTPUT 
           echo "registry=$registry" >> $GITHUB_OUTPUT
           echo "image=$image" >> $GITHUB_OUTPUT
 
@@ -90,11 +99,11 @@ jobs:
         run: |
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.vars.outputs.registry }}
 
-      - name: Build the kinsend-be Docker image
+      - name: Build ${{ steps.vars.outputs.image }}
         run: |
-          docker build -t ${{ steps.vars.outputs.image }} .
+          docker build --no-cache -t ${{ steps.vars.outputs.image }} .
 
-      - name: Push the kinsend-be Docker image
+      - name: Push ${{ steps.vars.outputs.image }}
         run: |
           docker push ${{ steps.vars.outputs.image }}
 

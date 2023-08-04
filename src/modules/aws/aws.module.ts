@@ -5,6 +5,7 @@ import * as AWS from 'aws-sdk';
 @Module({
   imports: [ConfigModule],
   providers: [
+    ConfigService,
     {
       provide: 'AWS',
       useFactory: (configService: ConfigService) => {

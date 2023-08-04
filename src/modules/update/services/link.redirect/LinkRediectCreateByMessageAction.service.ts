@@ -2,11 +2,12 @@
 /* eslint-disable new-cap */
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { ConfigService } from '../../../../configs/config.service';
 import { RequestContext } from '../../../../utils/RequestContext';
 import { regexLink } from '../../../../utils/getLinksInMessage';
 import { FormSubmissionDocument } from '../../../form.submission/form.submission.schema';
-import { LinkRedirect } from '../../link.redirect.schema';
+import { LinkRedirect, LinkRedirectDocument } from '../../link.redirect.schema';
 import { UpdateDocument } from '../../update.schema';
 import { LinkRediectCreateAction } from './LinkRediectCreateAction.service';
 
@@ -15,6 +16,7 @@ export class LinkRediectCreateByMessageAction {
   constructor(
     private readonly configService: ConfigService,
     @InjectModel(LinkRedirect.name)
+    private linkRedirectModel: Model<LinkRedirectDocument>,
     private linkRediectCreateAction: LinkRediectCreateAction,
   ) {}
 

@@ -17,7 +17,12 @@ export class LinkRedirect {
   @Transform(({ value }) => value.toString())
   _id: ObjectId;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Update', index: true, required: false })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Update',
+    index: true,
+    required: false,
+  })
   update?: Update;
 
   @Prop({ type: String, required: true, unique: true })
@@ -26,7 +31,11 @@ export class LinkRedirect {
   @Prop({ type: String, required: true })
   redirect: string;
 
-  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'FormSubmission', required: false })
+  @Prop({
+    type: [MongooseSchema.Types.ObjectId],
+    ref: 'FormSubmission',
+    required: false,
+  })
   clicked?: FormSubmissionDocument[];
 
   @Prop({ type: Boolean, required: false })

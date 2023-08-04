@@ -12,28 +12,32 @@ import {
   FormSubmissionDocument,
 } from 'src/modules/form.submission/form.submission.schema';
 
+import { REGION_DOMESTIC, TYPE_MESSAGE } from '../../../domain/const';
+import { SmsService } from '../../../shared/services/sms.service';
+import { RequestContext } from '../../../utils/RequestContext';
+import { MessageCreateAction } from '../../messages/services/MessageCreateAction.service';
 import {
   UpdateSchedule,
   UpdateScheduleDocument,
 } from '../update.schedule.schema';
-import { LinkRediectCreateByMessageAction } from './link.redirect/LinkRediectCreateByMessageAction.service';
-import { UpdateUpdateProgressAction } from './UpdateUpdateProgressAction.service';
-import { UpdateFindByIdWithoutReportingAction } from './UpdateFindByIdWithoutReportingAction.service';
-import { MessageCreateAction } from '../../messages/services/MessageCreateAction.service';
-import { RequestContext } from '../../../utils/RequestContext';
-import { SmsService } from '../../../shared/services/sms.service';
-import { REGION_DOMESTIC, TYPE_MESSAGE } from '../../../domain/const';
 import { UpdateChargeMessageTriggerAction } from './UpdateTriggerAction/UpdateChargeMessageTriggerAction';
+import { UpdateUpdateProgressAction } from './UpdateUpdateProgressAction.service';
+import { LinkRediectCreateByMessageAction } from './link.redirect/LinkRediectCreateByMessageAction.service';
 
+import { AWSCloudWatchLoggerService } from 'src/modules/aws/services/aws-cloudwatch-logger.service';
 import { FormSubmissionFindByIdAction } from 'src/modules/form.submission/services/FormSubmissionFindByIdAction.service';
-import { getLinksInMessage } from 'src/utils/getLinksInMessage';
-import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessage';
-import { UpdateDocument } from '../update.schema';
-import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
-import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
-import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
 import { MailSendGridService } from 'src/modules/mail/mail-send-grid.service';
-import { ConfigService } from '../../../configs/config.service';
+import { getHostname } from 'src/utils/getHostname';
+import { getLinksInMessage } from 'src/utils/getLinksInMessage';
+import { getLogStream } from 'src/utils/getLogStream';
+import { putLogEvent } from 'src/utils/putLogEvent';
+import { regionPhoneNumber } from 'src/utils/utilsPhoneNumber';
+import { fillMergeFieldsToMessage } from '../../../utils/fillMergeFieldsToMessage';
+import { FormSubmissionUpdateLastContactedAction } from '../../form.submission/services/FormSubmissionUpdateLastContactedAction.service';
+import { INTERVAL_TRIGGER_TYPE, UPDATE_PROGRESS } from '../interfaces/const';
+import { UpdateDocument } from '../update.schema';
+import * as util from 'util';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UpdateHandleSendSmsAction {
@@ -41,9 +45,11 @@ export class UpdateHandleSendSmsAction {
     private formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
     private mailService: MailSendGridService,
     private readonly configService: ConfigService,
+    @Inject(LinkRediectCreateByMessageAction)
+    private linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
+    @Inject(AWSCloudWatchLoggerService)
+    private awsCloudWatchLoggerService: AWSCloudWatchLoggerService,
   ) {}
-
-  // private readonly sqsService: SqsService;
 
   @Inject(MessageCreateAction) private messageCreateAction: MessageCreateAction;
   @Inject(UpdateChargeMessageTriggerAction)
@@ -52,31 +58,28 @@ export class UpdateHandleSendSmsAction {
   @InjectModel(UpdateSchedule.name)
   private updateScheduleModel: Model<UpdateScheduleDocument>;
 
-  // Created
   @Inject(FormSubmissionFindByIdAction)
   private formSubmissionFindByIdAction: FormSubmissionFindByIdAction;
 
   async handleSendSms(
     context: RequestContext,
     linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
-    // formSubmissionUpdateLastContactedAction: FormSubmissionUpdateLastContactedAction,
     updateUpdateProgressAction: UpdateUpdateProgressAction,
     smsService: SmsService,
-    // updateFindByIdWithoutReportingAction: UpdateFindByIdWithoutReportingAction,
     ownerPhoneNumber: string,
+    ownerEmail: string,
     subscribers: FormSubmission[],
     update: UpdateDocument,
-    // datetimeTrigger: Date,
     scheduleName: string,
   ): Promise<void> {
     const { logger } = context;
 
     const timeTriggerSchedule = new Date();
-    // console.log('Outside promise.all');
     await Promise.all(
       subscribers.map(async (sub) => {
-        // console.log('Inside promise.all');
         const { phoneNumber, firstName, lastName, email, _id } = sub;
+
+        Logger.log(`Sending message to ${email}`);
 
         const subscriber = await this.formSubmissionFindByIdAction.execute(
           context,
@@ -93,7 +96,6 @@ export class UpdateHandleSendSmsAction {
           update,
           sub,
           context,
-          linkRediectCreateByMessageAction,
         );
 
         const message = messageReview === null ? update.message : messageReview;
@@ -106,43 +108,53 @@ export class UpdateHandleSendSmsAction {
           email,
         });
 
-        // Note: run async for update lastContacted
         this.formSubmissionUpdateLastContactedAction.execute(
           context,
           to,
           ownerPhoneNumber,
         );
 
-        const { mailForm: mailFrom } = this.configService;
+        const testEmails: string[] = this.configService.get('app.test_emails');
+        const isTestEmail = testEmails.includes(ownerEmail);
+        Logger.log('Test Email?', isTestEmail);
+        const logGroup = 'kinsend-sqs-consumer';
+        const hostname = await getHostname();
+        const logStream = getLogStream(hostname, ownerEmail);
+        const logMessage = util.format(
+          'Sending message to %s%s\nMessage Content: %s',
+          to,
+          isTestEmail ? '\nSMS SKIPPED - test email detected' : '',
+          messageFilled,
+        );
+        putLogEvent(
+          this.awsCloudWatchLoggerService,
+          logGroup,
+          logStream,
+          logMessage,
+        );
 
-        const mail = {
-          to: email,
-          subject: 'Kinsend - SQS Test',
-          from: mailFrom,
-          html: `<p>Sending message to ${
-            firstName + ' ' + lastName
-          }. Email: ${email}</p>`,
-        };
+        if (isTestEmail) {
+          // Prevent sending SMS messages when test email has been used.
+          // This is used for SQS testing.
+          return;
+        }
 
-        Logger.log(`Sending email to ${email}`);
-        await this.mailService.sendTestMail(mail);
-
-        // return smsService.sendMessage(
-        //   context,
-        //   ownerPhoneNumber,
-        //   messageFilled,
-        //   update.fileUrl,
-        //   to,
-        //   `api/hook/sms/update/status/${update.id}`,
-        //   this.saveSms(
-        //     context,
-        //     ownerPhoneNumber,
-        //     to,
-        //     messageFilled,
-        //     update.fileUrl,
-        //     update.id,
-        //   ),
-        // );
+        return smsService.sendMessage(
+          context,
+          ownerPhoneNumber,
+          messageFilled,
+          update.fileUrl,
+          to,
+          `api/hook/sms/update/status/${update.id}`,
+          this.saveSms(
+            context,
+            ownerPhoneNumber,
+            to,
+            messageFilled,
+            update.fileUrl,
+            update.id,
+          ),
+        );
       }),
     );
     if (update.triggerType === INTERVAL_TRIGGER_TYPE.ONCE) {
@@ -199,13 +211,13 @@ export class UpdateHandleSendSmsAction {
     update: UpdateDocument,
     subscriber: FormSubmission,
     context: RequestContext,
-    linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
+    // linkRediectCreateByMessageAction: LinkRediectCreateByMessageAction,
   ) {
     const links = getLinksInMessage(update.message);
     if (links.length === 0) {
       return null;
     }
-    const linkCreated = await linkRediectCreateByMessageAction.execute(
+    const linkCreated = await this.linkRediectCreateByMessageAction.execute(
       context,
       update,
       subscriber as FormSubmissionDocument,
