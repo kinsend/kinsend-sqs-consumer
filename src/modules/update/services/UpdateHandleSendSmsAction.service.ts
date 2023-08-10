@@ -76,85 +76,89 @@ export class UpdateHandleSendSmsAction {
 
     const timeTriggerSchedule = new Date();
     await Promise.all(
-      subscribers.map(async (sub) => {
-        const { phoneNumber, firstName, lastName, email, _id } = sub;
-
-        Logger.log(`Sending message to ${email}`);
-
-        const subscriber = await this.formSubmissionFindByIdAction.execute(
-          context,
-          _id.toString(),
-        );
-
-        if (!subscriber || !subscriber.isSubscribed) {
-          return;
-        }
-
+      subscribers.map(async (subscriber) => {
+        const { phoneNumber, firstName, lastName, email, _id } = subscriber;
         const to = `+${phoneNumber.code}${phoneNumber.phone}`;
+        try {
+          Logger.log(`Sending message to ${email}`);
 
-        const messageReview = await this.handleGenerateLinkRedirect(
-          update,
-          sub,
-          context,
-        );
+          const subscriber = await this.formSubmissionFindByIdAction.execute(
+            context,
+            _id.toString(),
+          );
 
-        const message = messageReview === null ? update.message : messageReview;
+          if (!subscriber || !subscriber.isSubscribed) {
+            return;
+          }
 
-        const messageFilled = fillMergeFieldsToMessage(message, {
-          fname: firstName,
-          lname: lastName,
-          name: firstName + lastName,
-          mobile: to,
-          email,
-        });
+          const messageReview = await this.handleGenerateLinkRedirect(
+            update,
+            subscriber,
+            context,
+          );
 
-        this.formSubmissionUpdateLastContactedAction.execute(
-          context,
-          to,
-          ownerPhoneNumber,
-        );
+          const message =
+            messageReview === null ? update.message : messageReview;
 
-        const testEmails: string[] = this.configService.get('app.test_emails');
-        const isTestEmail = testEmails.includes(ownerEmail);
-        Logger.log('Test Email?', isTestEmail);
-        const logGroup = 'kinsend-sqs-consumer';
-        const hostname = await getHostname();
-        const logStream = getLogStream(hostname, ownerEmail);
-        const logMessage = util.format(
-          'Sending message to %s%s\nMessage Content: %s',
-          to,
-          isTestEmail ? '\nSMS SKIPPED - test email detected' : '',
-          messageFilled,
-        );
-        putLogEvent(
-          this.awsCloudWatchLoggerService,
-          logGroup,
-          logStream,
-          logMessage,
-        );
+          const messageFilled = fillMergeFieldsToMessage(message, {
+            fname: firstName,
+            lname: lastName,
+            name: firstName + lastName,
+            mobile: to,
+            email,
+          });
 
-        if (isTestEmail) {
-          // Prevent sending SMS messages when test email has been used.
-          // This is used for SQS testing.
-          return;
-        }
+          this.formSubmissionUpdateLastContactedAction.execute(
+            context,
+            to,
+            ownerPhoneNumber,
+          );
 
-        return smsService.sendMessage(
-          context,
-          ownerPhoneNumber,
-          messageFilled,
-          update.fileUrl,
-          to,
-          `api/hook/sms/update/status/${update.id}`,
-          this.saveSms(
+          const testEmails: string[] =
+            this.configService.get('app.test_emails');
+          const isTestEmail = testEmails.includes(ownerEmail);
+          Logger.log('Test Email?', isTestEmail);
+          const logGroup = 'kinsend-sqs-consumer';
+          const hostname = await getHostname();
+          const logStream = getLogStream(hostname, ownerEmail);
+          const logMessage = util.format(
+            'Sending message to %s%s\nMessage Content: %s',
+            to,
+            isTestEmail ? '\nSMS SKIPPED - test email detected' : '',
+            messageFilled,
+          );
+          putLogEvent(
+            this.awsCloudWatchLoggerService,
+            logGroup,
+            logStream,
+            logMessage,
+          );
+
+          if (isTestEmail) {
+            // Prevent sending SMS messages when test email has been used.
+            // This is used for SQS testing.
+            return;
+          }
+
+          return smsService.sendMessage(
             context,
             ownerPhoneNumber,
-            to,
             messageFilled,
             update.fileUrl,
-            update.id,
-          ),
-        );
+            to,
+            `api/hook/sms/update/status/${update.id}`,
+            this.saveSms(
+              context,
+              ownerPhoneNumber,
+              to,
+              messageFilled,
+              update.fileUrl,
+              update.id,
+            ),
+          );
+        } catch (error) {
+          Logger.error(`Error sending message to ${to}`, error);
+        }
       }),
     );
     if (update.triggerType === INTERVAL_TRIGGER_TYPE.ONCE) {
