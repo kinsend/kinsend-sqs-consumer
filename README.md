@@ -47,3 +47,4 @@ To send a message to the SQS queue, start `kinsend-fe` and `kinsend-be` applicat
 ## Note
 
 Please ensure that the necessary AWS credentials are configured in your environment through environment variables.
+
