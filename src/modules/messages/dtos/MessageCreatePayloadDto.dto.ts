@@ -1,6 +1,13 @@
 /* eslint-disable max-classes-per-file */
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { TYPE_MESSAGE } from '../../../domain/const';
 
 export class MessageCreatePayloadDto {
@@ -114,4 +121,15 @@ export class MessageTestCreatePayloadDto extends MessageCreatePayloadDto {
   @IsNotEmpty()
   @IsOptional()
   numberMessage: number;
+}
+
+export class MessageCreatePayDto extends MessageCreatePayloadDto {
+  @ApiProperty({
+    example: false,
+    required: false,
+    type: Boolean,
+  })
+  @IsBoolean()
+  @IsOptional()
+  statusPaid = false;
 }
