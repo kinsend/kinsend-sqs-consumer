@@ -132,10 +132,10 @@ jobs:
           echo "Preparing to deploy new version: $VERSION" > /dev/null
 
           echo "Print currently deployed sqs image version" > /dev/null
-          aws ssm get-parameter --name kinsend.sqs.dev.image_version
+          aws ssm get-parameter --name dev.kinsend.sqs.image_version
 
           echo "Update sqs version parameter to $VERSION" > /dev/null
-          aws ssm put-parameter --overwrite --type String --name kinsend.sqs.dev.image_version --value $VERSION
+          aws ssm put-parameter --overwrite --type String --name dev.kinsend.sqs.image_version --value $VERSION
 
           echo "Scale EC2 instance down" > /dev/null
           scalingGroup=$(aws autoscaling describe-auto-scaling-groups | jq -er '.AutoScalingGroups | .[] | select(.AutoScalingGroupName | startswith("kinsend-sqs-agent-")) | .AutoScalingGroupName')
