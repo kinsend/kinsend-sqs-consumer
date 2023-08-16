@@ -222,5 +222,5 @@ jobs:
                docker run -it --rm ${{ steps.vars.outputs.image }}
                ```
 
-            3. [Check instance via the management console](https://${{ env.AWS_REGION }}.aws.amazon.com/ec2/home?region=us-east-1#InstanceDetails:instanceId=${{ steps.deployment.outputs.instanceId }}) (if image was deployed)  
+            3. [Check instance via the management console](https://${{ env.AWS_REGION }}.console.aws.amazon.com/ec2/home?region=${{ env.AWS_REGION }}#InstanceDetails:instanceId=${{ steps.deployment.outputs.instanceId }}) (if image was deployed)  
                Note: It takes between 2 to 5 minutes for the new EC2 instance to boot the new docker container. Be patient.
