@@ -28,5 +28,6 @@ jobs:
           body: |
             > Command       | Description
             > ------------- | -----------
-            > /docker:push  | Builds and pushed the current PR to ECR
+            > /docker:push  | Builds and pushes the current PR to ECR
+            > /ec2:deploy   | Builds, pushes and deploys the current PR into a new EC2 instance (dev env).
           reaction-type: hooray

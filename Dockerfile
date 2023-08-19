@@ -1,6 +1,6 @@
 FROM node:16-alpine
 
-ARG GIT_REF="local_build"
+ARG MANIFEST_VERSION="local_build"
 
 LABEL authors="martin.todorov@kinsend.io"
 
@@ -16,8 +16,11 @@ COPY ./*.lock /app/
 
 WORKDIR /app
 
-RUN set -x && \
-    npm install
+RUN set -x  \
+ && npm install \
+ && [[ ! -f /tmp/test.json ]] && echo "{}" > /app/build-manifest.json \
+ && /bin/bash -c "set -xe;cat <<< \$(jq -r '. |= . + { \"git_ref\": \"$MANIFEST_VERSION\" }' /app/build-manifest.json) > /app/build-manifest.json" \
+ && cat /app/build-manifest.json
 
 EXPOSE 3000/tcp
 
