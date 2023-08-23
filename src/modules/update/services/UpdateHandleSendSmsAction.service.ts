@@ -175,17 +175,6 @@ export class UpdateHandleSendSmsAction {
         },
       );
     }
-    try {
-      await this.updateChargeMessageTriggerAction.execute(
-        context,
-        update.id,
-        timeTriggerSchedule,
-      );
-    } catch (error) {
-      logger.error(
-        `Exception payment charges error by Stripe: ${error.message || error}`,
-      );
-    }
   }
 
   private saveSms(
@@ -208,6 +197,7 @@ export class UpdateHandleSendSmsAction {
         phoneNumberReceipted: to,
         errorMessage: error,
         typeMessage: !file ? this.handleTypeMessage(to) : TYPE_MESSAGE.MMS,
+        statusPaid: true,
       });
   }
 

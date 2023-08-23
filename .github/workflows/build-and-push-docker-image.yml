@@ -145,7 +145,7 @@ jobs:
           sleep 15
 
           echo "Scaling EC2 instance up" > /dev/null
-          aws autoscaling update-auto-scaling-group --auto-scaling-group-name $scalingGroup --min-size 1 --desired-capacity 1
+          aws autoscaling update-auto-scaling-group --auto-scaling-group-name $scalingGroup --min-size 0 --desired-capacity 1
 
           echo "Waiting for EC2 instance to boot." > /dev/null
           i="0"
