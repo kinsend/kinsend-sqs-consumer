@@ -4,13 +4,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TYPE_MESSAGE } from '../../../domain/const';
-import { convertStringToPhoneNumber } from '../../../utils/convertStringToPhoneNumber';
 import { RequestContext } from '../../../utils/RequestContext';
+import { convertStringToPhoneNumber } from '../../../utils/convertStringToPhoneNumber';
 import { FormSubmissionDocument } from '../../form.submission/form.submission.schema';
 import { FormSubmissionFindByPhoneNumberAction } from '../../form.submission/services/FormSubmissionFindByPhoneNumberAction.service';
 import { UserFindByPhoneSystemAction } from '../../user/services/UserFindByPhoneSystemAction.service';
 import { UserDocument } from '../../user/user.schema';
-import { MessageCreatePayloadDto } from '../dtos/MessageCreatePayloadDto.dto';
+import { MessageCreatePayDto } from '../dtos/MessageCreatePayloadDto.dto';
 import { Message, MessageDocument } from '../message.schema';
 
 @Injectable()
@@ -23,7 +23,7 @@ export class MessageCreateAction {
 
   async execute(
     context: RequestContext,
-    payload: MessageCreatePayloadDto,
+    payload: MessageCreatePayDto,
   ): Promise<MessageDocument> {
     const {
       isSubscriberMessage,
