@@ -197,7 +197,6 @@ export class UpdateHandleSendSmsAction {
         phoneNumberReceipted: to,
         errorMessage: error,
         typeMessage: !file ? this.handleTypeMessage(to) : TYPE_MESSAGE.MMS,
-        statusPaid: true,
       });
   }
 

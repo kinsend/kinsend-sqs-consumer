@@ -6,12 +6,14 @@ import { Message, MessageSchema } from './message.schema';
 import { MessageCreateAction } from './services/MessageCreateAction.service';
 import { MessagesFindByConditionAction } from './services/MessagesFindByConditionAction.service';
 import { MessageUpdateManyAction } from './services/MessageUpdateManyAction.service';
+import { PlanSubscriptionModule } from '../plan-subscription/plan-subscription.module';
 
 @Module({
   imports: [
     forwardRef(() => FormSubmissionModule),
     UserModule,
     MongooseModule.forFeature([{ name: Message.name, schema: MessageSchema }]),
+    PlanSubscriptionModule,
   ],
   controllers: [],
   providers: [
@@ -19,6 +21,10 @@ import { MessageUpdateManyAction } from './services/MessageUpdateManyAction.serv
     MessagesFindByConditionAction,
     MessageUpdateManyAction,
   ],
-  exports: [MessageCreateAction, MessagesFindByConditionAction, MessageUpdateManyAction],
+  exports: [
+    MessageCreateAction,
+    MessagesFindByConditionAction,
+    MessageUpdateManyAction,
+  ],
 })
 export class MessageModule {}

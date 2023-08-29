@@ -16,12 +16,13 @@ import { CNAMEModule } from './modules/cname/cname.module';
 import { UpdateModule } from './modules/update/update.module';
 import { MessageModule } from './modules/messages/message.module';
 import { SharedModule } from './shared/shared.module';
+import { PlanSubscriptionModule } from './modules/plan-subscription/plan-subscription.module';
 
 @Module({
   imports: [
     SharedModule,
-    ConfigModule, 
-    AWSModule, 
+    ConfigModule,
+    AWSModule,
     SQSModule,
     UserModule,
     PaymentModule,
@@ -34,7 +35,9 @@ import { SharedModule } from './shared/shared.module';
     CNAMEModule,
     UpdateModule,
     MessageModule,
-    AWSModule],
+    AWSModule,
+    PlanSubscriptionModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
