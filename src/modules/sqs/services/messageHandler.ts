@@ -34,7 +34,6 @@ export class MessageHandler {
 
   @SqsMessageHandler(process.env.AWS_SQS_NAME)
   async handleMessage(message: AWS.SQS.Message) {
-    console.log('message', message);
     let body: any = message.Body;
     body = JSON.parse(body) as any;
     let msg: any = body.message;
