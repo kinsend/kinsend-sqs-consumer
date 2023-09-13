@@ -35,7 +35,6 @@ export class MessageCreateAction {
       fileAttached,
       typeMessage,
     } = payload;
-
     const { user } = context;
     const planSubscription =
       await this.planSubscriptionGetByUserIdAction.execute(user.id);
@@ -65,7 +64,7 @@ export class MessageCreateAction {
       formSubmission: subscriber,
       user: userModel[0],
       statusPaid:
-        planSubscription.planPaymentMethod === PLAN_PAYMENT_METHOD.MONTHLY
+        planSubscription?.planPaymentMethod === PLAN_PAYMENT_METHOD.MONTHLY
           ? true
           : false,
     }).save();
