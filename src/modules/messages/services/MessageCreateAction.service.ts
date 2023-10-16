@@ -3,14 +3,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { PLAN_PAYMENT_METHOD } from 'src/modules/plan-subscription/plan-subscription.constant';
 import { TYPE_MESSAGE } from '../../../domain/const';
 import { RequestContext } from '../../../utils/RequestContext';
 import { convertStringToPhoneNumber } from '../../../utils/convertStringToPhoneNumber';
 import { FormSubmissionDocument } from '../../form.submission/form.submission.schema';
 import { FormSubmissionFindByPhoneNumberAction } from '../../form.submission/services/FormSubmissionFindByPhoneNumberAction.service';
+import { PlanSubscriptionGetByUserIdAction } from '../../plan-subscription/services/plan-subscription-get-by-user-id-action.service';
 import { UserFindByPhoneSystemAction } from '../../user/services/UserFindByPhoneSystemAction.service';
 import { UserDocument } from '../../user/user.schema';
-import { MessageCreatePayDto } from '../dtos/MessageCreatePayloadDto.dto';
+import { MessageCreatePayloadDto } from '../dtos/MessageCreatePayloadDto.dto';
 import { Message, MessageDocument } from '../message.schema';
 
 @Injectable()
@@ -19,11 +21,12 @@ export class MessageCreateAction {
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
     private formSubmissionFindByPhoneNumberAction: FormSubmissionFindByPhoneNumberAction,
     private userFindByPhoneSystemAction: UserFindByPhoneSystemAction,
+    private planSubscriptionGetByUserIdAction: PlanSubscriptionGetByUserIdAction,
   ) {}
 
   async execute(
     context: RequestContext,
-    payload: MessageCreatePayDto,
+    payload: MessageCreatePayloadDto,
   ): Promise<MessageDocument> {
     const {
       isSubscriberMessage,
@@ -32,6 +35,9 @@ export class MessageCreateAction {
       fileAttached,
       typeMessage,
     } = payload;
+    const { user } = context;
+    const planSubscription =
+      await this.planSubscriptionGetByUserIdAction.execute(user.id);
     const subscribers =
       await this.formSubmissionFindByPhoneNumberAction.execute(
         context,
@@ -57,6 +63,10 @@ export class MessageCreateAction {
       typeMessage: type,
       formSubmission: subscriber,
       user: userModel[0],
+      statusPaid:
+        planSubscription?.planPaymentMethod === PLAN_PAYMENT_METHOD.MONTHLY
+          ? true
+          : false,
     }).save();
   }
 

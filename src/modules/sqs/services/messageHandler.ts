@@ -70,7 +70,7 @@ export class MessageHandler {
       context,
       String(update.createdBy),
     );
-
+    context.user = owner || {};
     if (!update) {
       return Logger.error('update not found');
     }

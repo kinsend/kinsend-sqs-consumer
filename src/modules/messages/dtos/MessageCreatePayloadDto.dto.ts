@@ -122,14 +122,3 @@ export class MessageTestCreatePayloadDto extends MessageCreatePayloadDto {
   @IsOptional()
   numberMessage: number;
 }
-
-export class MessageCreatePayDto extends MessageCreatePayloadDto {
-  @ApiProperty({
-    example: false,
-    required: false,
-    type: Boolean,
-  })
-  @IsBoolean()
-  @IsOptional()
-  statusPaid = false;
-}

@@ -52,6 +52,7 @@ import { UserFindByIdAction } from '../user/services/UserFindByIdAction.service'
 import { UserFindByPhoneSystemAction } from '../user/services/UserFindByPhoneSystemAction.service';
 import { User, UserSchema } from '../user/user.schema';
 import { AWSCloudWatchLoggerService } from '../aws/services/aws-cloudwatch-logger.service';
+import { PlanSubscriptionModule } from '../plan-subscription/plan-subscription.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { AWSCloudWatchLoggerService } from '../aws/services/aws-cloudwatch-logge
     UpdateModule,
     ConfigModule,
     SharedModule,
+    PlanSubscriptionModule,
     MongooseModule.forFeature([
       { name: FormSubmission.name, schema: FormSubmissionSchema },
       { name: LinkRedirect.name, schema: LinkRedirectSchema },
